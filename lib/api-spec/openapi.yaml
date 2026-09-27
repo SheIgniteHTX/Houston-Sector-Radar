@@ -1,0 +1,416 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: radar
+    description: Houston sector and workforce signals
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /radar:
+    get:
+      operationId: getRadar
+      tags: [radar]
+      summary: Get sectors, skills, and radar summary
+      responses:
+        "200":
+          description: Houston emerging sector radar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RadarResponse"
+  /houston-employment:
+    get:
+      operationId: getHoustonEmploymentTrend
+      tags: [radar]
+      summary: Get current Houston metro and matched industry employment trends from BLS
+      responses:
+        "200":
+          description: Latest same-month year-over-year Houston CES employment trends
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HoustonEmploymentResponse"
+        "502":
+          description: BLS employment data is temporarily unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required: [error]
+  /sector-updates:
+    get:
+      operationId: getSectorUpdates
+      tags: [radar]
+      summary: Get source-backed published sector updates
+      responses:
+        "200":
+          description: Latest published BLS-backed updates and source refresh status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectorUpdatesResponse"
+  /follow:
+    post:
+      operationId: createFollow
+      tags: [radar]
+      summary: Follow a sector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FollowInput"
+      responses:
+        "200":
+          description: Follow recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResponse"
+        "400":
+          description: Invalid follow request
+  /follow/unsubscribe:
+    get:
+      operationId: getSectorUnsubscribeConfirmation
+      tags: [radar]
+      summary: Confirm whether a signed sector unsubscribe link is valid
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unsubscribe confirmation page
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Incomplete unsubscribe link
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Invalid unsubscribe link
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      operationId: unsubscribeFromSector
+      tags: [radar]
+      summary: Unsubscribe from a sector's email updates
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unsubscribe completed
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Incomplete unsubscribe link
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Invalid unsubscribe link
+          content:
+            text/html:
+              schema:
+                type: string
+  /signal:
+    post:
+      operationId: createSkillSignal
+      tags: [radar]
+      summary: Submit an anonymous skills-interest signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkillSignalInput"
+      responses:
+        "200":
+          description: Signal recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillSignalResponse"
+        "400":
+          description: Invalid signal
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Skill:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required: [id, label]
+    Momentum:
+      type: string
+      enum: [accelerating, rising, emerging]
+    Sector:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        industry:
+          type: string
+        momentum:
+          $ref: "#/components/schemas/Momentum"
+        why:
+          type: string
+        work:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        verified:
+          type: boolean
+        verifiedBy:
+          type: string
+        followers:
+          type: integer
+      required: [id, name, industry, momentum, why, work, skills, verified, verifiedBy, followers]
+    RadarSummary:
+      type: object
+      properties:
+        totalSectors:
+          type: integer
+        accelerating:
+          type: integer
+        rising:
+          type: integer
+        emerging:
+          type: integer
+        totalFollows:
+          type: integer
+      required: [totalSectors, accelerating, rising, emerging, totalFollows]
+    RadarResponse:
+      type: object
+      properties:
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/Skill"
+        sectors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Sector"
+        summary:
+          $ref: "#/components/schemas/RadarSummary"
+      required: [skills, sectors, summary]
+    HoustonEmploymentTrend:
+      type: object
+      properties:
+        period:
+          type: string
+          description: Latest month with a same-month prior-year comparison.
+        comparisonPeriod:
+          type: string
+          description: The same calendar month one year earlier.
+        employmentThousands:
+          type: number
+          description: Payroll employment, reported in thousands of jobs.
+        changeThousands:
+          type: number
+          description: Year-over-year change in payroll employment, in thousands of jobs.
+        changePercent:
+          type: number
+          description: Year-over-year percentage change in payroll employment.
+        preliminary:
+          type: boolean
+          description: Whether BLS marks the latest monthly estimate as preliminary.
+      required: [period, comparisonPeriod, employmentThousands, changeThousands, changePercent, preliminary]
+    HoustonMetroEmploymentContext:
+      type: object
+      properties:
+        category:
+          type: string
+          description: Exact BLS industry category.
+        seriesId:
+          type: string
+          description: BLS CES series identifier.
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+          format: uri
+        limitation:
+          type: string
+          description: Important limit on interpreting the metro-wide context series.
+        trend:
+          $ref: "#/components/schemas/HoustonEmploymentTrend"
+      required: [category, seriesId, sourceName, sourceUrl, limitation, trend]
+    HoustonIndustryEmploymentTrend:
+      type: object
+      properties:
+        radarIndustryId:
+          type: string
+        radarIndustryName:
+          type: string
+        category:
+          type: string
+          description: Exact BLS CES industry category.
+        seriesId:
+          type: string
+          description: BLS CES series identifier.
+        sourceName:
+          type: string
+        sourceUrl:
+          type: string
+          format: uri
+        limitation:
+          type: string
+          description: Limitation of mapping this published industry to a radar industry.
+        naics:
+          type: string
+          description: NAICS category represented by the BLS series.
+        trend:
+          $ref: "#/components/schemas/HoustonEmploymentTrend"
+      required: [radarIndustryId, radarIndustryName, category, seriesId, sourceName, sourceUrl, limitation, naics, trend]
+    HoustonEmploymentResponse:
+      type: object
+      properties:
+        metro:
+          $ref: "#/components/schemas/HoustonMetroEmploymentContext"
+        industries:
+          type: array
+          items:
+            $ref: "#/components/schemas/HoustonIndustryEmploymentTrend"
+      required: [metro, industries]
+    SectorUpdatesResponse:
+      type: object
+      properties:
+        sourceStatus:
+          type: string
+          enum: [current, unavailable]
+        updates:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorUpdate"
+      required: [sourceStatus, updates]
+    SectorUpdate:
+      type: object
+      properties:
+        id:
+          type: integer
+        sectorId:
+          type: string
+        sectorName:
+          type: string
+        period:
+          type: string
+        comparisonPeriod:
+          type: string
+        blsIndustry:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        scope:
+          type: string
+        employmentThousands:
+          type: number
+        changeThousands:
+          type: number
+        changePercent:
+          type: number
+        preliminary:
+          type: boolean
+        sourceUrl:
+          type: string
+          format: uri
+        publishedAt:
+          type: string
+          format: date-time
+      required: [id, sectorId, sectorName, period, comparisonPeriod, blsIndustry, title, summary, scope, employmentThousands, changeThousands, changePercent, preliminary, sourceUrl, publishedAt]
+    FollowInput:
+      type: object
+      properties:
+        sectorId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        consent:
+          type: boolean
+      required: [sectorId, email, consent]
+    FollowResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        already:
+          type: boolean
+        followers:
+          type: integer
+        confirmationEmailStatus:
+          type: string
+          enum: [sent, failed, not_sent]
+      required: [ok, already, followers, confirmationEmailStatus]
+    SkillSignalInput:
+      type: object
+      properties:
+        skills:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+      required: [skills]
+    SkillSignalResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+

@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+  --font-display: var(--app-font-display);
+}
+
+:root {
+  --background: 220 34% 8%;
+  --foreground: 192 30% 92%;
+  --card: 220 29% 11%;
+  --card-foreground: 192 30% 92%;
+  --border: 214 26% 22%;
+  --input: 214 26% 25%;
+  --ring: 175 80% 53%;
+  --primary: 175 80% 53%;
+  --primary-foreground: 220 34% 8%;
+  --secondary: 220 25% 16%;
+  --secondary-foreground: 192 30% 92%;
+  --muted: 217 24% 17%;
+  --muted-foreground: 211 18% 64%;
+  --accent: 39 92% 61%;
+  --accent-foreground: 220 34% 8%;
+  --app-font-sans: 'IBM Plex Sans', sans-serif;
+  --app-font-display: 'Bricolage Grotesque', sans-serif;
+  --app-font-mono: 'IBM Plex Mono', monospace;
+  --radius: .75rem;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--app-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+::selection { background: hsl(var(--primary) / .35); color: hsl(var(--foreground)); }
+
+.font-display { font-family: var(--app-font-display); }
+.font-mono-radar { font-family: var(--app-font-mono); }
+
+.radar-shell {
+  position: relative;
+  aspect-ratio: 1;
+  width: min(100%, 590px);
+  margin-inline: auto;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, hsl(175 80% 53% / .09) 0 1px, transparent 1.5px),
+    radial-gradient(circle at center, hsl(175 80% 53% / .055), transparent 61%);
+  box-shadow: inset 0 0 70px hsl(175 80% 53% / .06), 0 0 90px hsl(175 80% 53% / .045);
+}
+.radar-ring {
+  position: absolute;
+  inset: 8%;
+  border: 1px solid hsl(var(--primary) / .25);
+  border-radius: 999px;
+}
+.radar-ring::before, .radar-ring::after {
+  content: '';
+  position: absolute;
+  border: 1px solid hsl(var(--primary) / .18);
+  border-radius: 999px;
+}
+.radar-ring::before { inset: 17%; }
+.radar-ring::after { inset: 34%; }
+.radar-crosshair::before, .radar-crosshair::after {
+  content: '';
+  position: absolute;
+  background: hsl(var(--primary) / .16);
+}
+.radar-crosshair::before { width: 1px; inset-block: 8%; left: 50%; }
+.radar-crosshair::after { height: 1px; inset-inline: 8%; top: 50%; }
+.radar-sweep {
+  position: absolute;
+  inset: 8%;
+  border-radius: 999px;
+  overflow: hidden;
+  animation: radar-rotate 7s linear infinite;
+  transform-origin: center;
+}
+.radar-sweep::before {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  left: 50%;
+  top: 0;
+  transform-origin: 0 100%;
+  background: conic-gradient(from 0deg, hsl(var(--primary) / .2), transparent 23%);
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+.radar-sweep::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 50%;
+  background: linear-gradient(to bottom, hsl(var(--primary) / .9), transparent);
+  transform-origin: bottom center;
+}
+.radar-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border-radius: 99px;
+  background: hsl(var(--primary));
+  box-shadow: 0 0 0 8px hsl(var(--primary) / .08), 0 0 20px hsl(var(--primary) / .65);
+}
+.signal-dot {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  transform: translate(-50%, -50%);
+  border-radius: 99px;
+  background: var(--signal-color, hsl(var(--primary)));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal-color, hsl(var(--primary))) 14%, transparent), 0 0 22px color-mix(in srgb, var(--signal-color, hsl(var(--primary))) 55%, transparent);
+  animation: signal-pulse 2.4s ease-in-out infinite;
+}
+.signal-dot[data-active='true'] { width: 19px; height: 19px; box-shadow: 0 0 0 8px color-mix(in srgb, var(--signal-color, hsl(var(--primary))) 20%, transparent), 0 0 32px color-mix(in srgb, var(--signal-color, hsl(var(--primary))) 68%, transparent); }
+.radar-label {
+  left: 50%;
+  top: 18px;
+  width: 110px;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.scan-active .radar-sweep { animation-duration: 1.1s; }
+.scan-active .signal-dot { animation-duration: .72s; }
+
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+.animate-rise { animation: rise .65s cubic-bezier(.22,1,.36,1) both; }
+@keyframes radar-rotate { to { transform: rotate(360deg); } }
+@keyframes signal-pulse { 0%,100% { opacity: .72; transform: translate(-50%,-50%) scale(.86); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.18); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 640px) {
+  .radar-label {
+    top: -14px;
+    width: max-content;
+    max-width: 150px;
+    transform: none;
+    text-align: left;
+  }
+  .radar-label--left { left: auto; right: 20px; }
+  .radar-label--right { left: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

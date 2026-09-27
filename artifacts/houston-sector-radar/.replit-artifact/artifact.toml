@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Houston Workforce Radar"
+description = "Houston Workforce Radar pairs interactive sector signals with an open-text skills scan. Scan results include a sourced, metro-wide BLS employment trend; radar industry labels remain illustrative."
+version = "1.0.0"
+id = "artifacts/houston-sector-radar"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18637
+
+[services.development]
+run = "pnpm --filter @workspace/houston-sector-radar run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/houston-sector-radar", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/houston-sector-radar/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18637"
+BASE_PATH = "/"
